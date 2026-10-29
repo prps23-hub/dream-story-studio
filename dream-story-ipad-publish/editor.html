@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#15131f">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor | Dream Story Studio</title>
+  <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+  <div class="editor-app">
+
+    <!-- แถบด้านบน -->
+    <header class="toolbar">
+      <div class="brand">✦ Dream Story Studio</div>
+      <div id="projectTitle">ยังไม่ได้เลือกโปรเจกต์</div>
+      <div class="toolbar-actions">
+        <button id="saveButton" type="button" disabled>บันทึก</button>
+        <button id="previewButton" type="button" disabled>ทดลองเล่น</button>
+        <a href="index.html">หน้าแรก</a>
+      </div>
+    </header>
+
+    <!-- พื้นที่ทำงาน -->
+    <main class="workspace">
+
+      <!-- คลังไฟล์ -->
+      <aside class="asset-panel">
+        <h2>คลังไฟล์</h2>
+
+        <section>
+          <h3>ฉากหลัง</h3>
+          <button id="addBackground" type="button">
+            + เพิ่มฉากหลัง
+          </button>
+          <input
+            id="backgroundFileInput"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            hidden
+          >
+          <button id="clearSceneBackground" type="button">
+              🧹 ลบพื้นหลังของฉาก
+            </button>
+            <div id="backgroundLibrary" class="asset-list"></div>
+<div class="background-position-controls">
+  <h4>🖼️ ปรับภาพพื้นหลัง</h4>
+
+  <label class="background-edit-label">
+    <input id="backgroundEditMode" type="checkbox">
+    เปิดโหมดลากภาพพื้นหลัง
+  </label>
+
+  <label for="backgroundZoom">
+    ซูมภาพ: <span id="backgroundZoomValue">100%</span>
+  </label>
+
+  <input id="backgroundZoom"
+         type="range"
+         min="100"
+         max="300"
+         step="5"
+         value="100">
+
+  <button id="resetBackgroundPosition" type="button">
+    ↺ รีเซ็ตตำแหน่งและขนาดภาพ
+  </button>
+
+  <p class="background-edit-hint">
+    เปิดโหมดปรับภาพ แล้วลากพื้นที่ว่างของฉาก
+    เพื่อเลื่อนภาพพื้นหลัง
+  </p>
+</div>
+
+        </section>
+
+        <section>
+          <h3>ตัวละคร</h3>
+          <button id="addCharacter" type="button">
+            + เพิ่มตัวละคร
+          </button>
+          <input
+            id="characterFileInput"
+            type="file"
+            accept="image/png,image/webp"
+            hidden
+          >
+          <div id="characterLibrary" class="asset-list"></div>
+        </section>
+
+        <section>
+          <h3>เสียงและเพลง</h3>
+          <button id="addAudio" type="button" disabled>
+            + เพิ่มไฟล์เสียง
+          </button>
+          <div id="audioLibrary" class="asset-list"></div>
+        </section>
+      </aside>
+
+      <!-- พื้นที่จัดฉาก -->
+      <section class="stage-panel">
+        <div class="stage-heading">
+          <h2>พื้นที่จัดฉาก</h2>
+          <span id="aspectRatioLabel">9:16</span>
+        </div>
+
+        <div class="stage-container">
+          <div id="gameStage" class="game-stage mobile">
+            <div class="ad-space">พื้นที่โฆษณา</div>
+
+            <div class="scene-content">
+              <p class="stage-placeholder">
+                ลากฉากและตัวละครมาวางที่นี่
+              </p>
+
+              <div id="gameEnding" class="game-ending" hidden>
+  <div class="game-ending-card">
+    <div class="game-ending-label">THE END</div>
+    <h2 id="gameEndingTitle">จบเรื่องราว</h2>
+    <p>ขอบคุณที่เล่น!</p>
+    <button id="restartGameButton" type="button">
+      ↻ เล่นใหม่
+    </button>
+    <button id="exitEndingButton" type="button">
+      ■ กลับสู่โหมดแก้ไข
+    </button>
+  </div>
+</div>
+<div id="gameChoices" class="game-choices" hidden></div>
+<div class="dialogue-preview">
+                <div id="speakerPreview">ชื่อตัวละคร</div>
+                <div id="textPreview">
+                  บทสนทนาจะแสดงตรงนี้
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- แผงปรับแต่ง -->
+      <aside class="properties-panel">
+<div class="ending-editor">
+  <h3>🏁 ตั้งค่าตอนจบ</h3>
+  <label class="ending-toggle">
+    <input id="isEndingScene" type="checkbox">
+    ฉากนี้เป็นตอนจบ
+  </label>
+  <label for="endingTitle">ชื่อตอนจบ</label>
+  <input
+    id="endingTitle"
+    type="text"
+    placeholder="เช่น Good Ending"
+    disabled
+  >
+  <p class="ending-help">
+    เมื่อเล่นบทสนทนาครบ จะแสดงหน้าจบเกม
+  </p>
+</div>
+<div class="game-validator-panel">
+  <h3>🔍 ตรวจสอบเกม</h3>
+  <button id="validateGameButton" type="button">
+    ตรวจสอบความพร้อม
+  </button>
+  <div id="gameValidationResults"
+       role="status"
+       aria-live="polite"></div>
+</div>
+<div class="export-editor" style="padding:12px">
+  <h3>📦 ส่งออกเกม</h3>
+  <button id="exportGameButton" type="button">
+    ดาวน์โหลดเกม ZIP
+  </button>
+  <p id="exportStatus" role="status" style="font-size:12px"></p>
+</div>
+<div class="choice-editor">
+  <h3>ตัวเลือกของฉาก</h3>
+  <p class="choice-help">
+    ตัวเลือกจะแสดงหลังบทสนทนาสุดท้าย
+  </p>
+  <button id="addChoiceButton" type="button">
+    + เพิ่มตัวเลือก
+  </button>
+  <div id="choiceEditorList"></div>
+</div>
+
+<div class="dialogue-test-controls">
+  <button id="testDialogue" type="button">
+    ▶ ทดลองบทสนทนา
+  </button>
+  <button id="stopDialogue" type="button" disabled>
+    ■ กลับสู่โหมดแก้ไข
+  </button>
+</div>
+
+        <div style="padding:12px;">
+          <button
+            id="removeStageCharacter"
+            type="button"
+            disabled
+            style="width:100%;"
+          >
+            🧹 ลบตัวละครที่เลือกออกจากฉาก (เก็บไว้ในคลัง)
+          </button>
+        </div>
+
+        <div id="characterSizeControls" style="padding:12px;">
+          <label for="characterSize">
+            ขนาดตัวละคร:
+            <span id="characterSizeValue">45%</span>
+          </label>
+
+          <input
+            id="characterSize"
+            type="range"
+            min="10"
+            max="100"
+            value="45"
+            step="1"
+            disabled
+            style="width:100%;"
+          >
+
+          <p>คลิกตัวละครบนฉากเพื่อปรับขนาด</p>
+        </div>
+
+        <h2>ปรับแต่ง</h2>
+        <p>เลือกฉากหรือตัวละครเพื่อแก้ไขรายละเอียด</p>
+
+        <label for="speakerInput">ผู้พูด</label>
+        <input
+          id="speakerInput"
+          type="text"
+          placeholder="ชื่อตัวละคร"
+        >
+
+        <label for="dialogueInput">บทสนทนา</label>
+        <textarea
+          id="dialogueInput"
+          rows="6"
+          placeholder="พิมพ์บทสนทนาที่นี่..."
+        ></textarea>
+      </aside>
+
+    </main>
+
+    <!-- แถบลำดับเนื้อเรื่อง -->
+    <footer class="story-panel">
+      <div class="story-heading">
+        <h2>ลำดับเนื้อเรื่อง</h2>
+        <button id="addDialogue" type="button">
+          + เพิ่มบทสนทนา
+        </button>
+        <button id="addChoice" type="button" disabled>
+          + เพิ่มทางเลือก
+        </button>
+      </div>
+
+      <div id="storyTimeline" class="story-timeline">
+<div class="scene-manager">
+  <div class="scene-manager-actions">
+    <button id="addSceneButton" type="button">
+      + เพิ่มฉาก
+    </button>
+    <button id="renameSceneButton" type="button">
+      เปลี่ยนชื่อฉาก
+    </button>
+    <button id="deleteSceneButton" type="button">
+      ลบฉาก
+    </button>
+  </div>
+  <div id="sceneTimelineList" class="scene-timeline-list"></div>
+</div>
+
+        ยังไม่มีบทสนทนา
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="js/database.js"></script>
+  <!-- ===== Dream Story Tree V1 ===== -->
+<button id="openStoryTree"
+        class="story-tree-floating-button"
+        type="button">
+  🌳 Story Tree
+</button>
+
+<div id="storyTreeModal"
+     class="story-tree-modal"
+     hidden>
+
+  <div class="story-tree-window">
+
+    <header class="story-tree-header">
+      <div>
+        <h2>🌳 Story Tree</h2>
+        <p>แผนผังเส้นทางเนื้อเรื่อง</p>
+      </div>
+
+      <div class="story-tree-actions">
+        <button id="storyTreeZoomOut" type="button">−</button>
+        <span id="storyTreeZoomValue">100%</span>
+        <button id="storyTreeZoomIn" type="button">+</button>
+        <button id="storyTreeRefresh" type="button">↻</button>
+        <button id="closeStoryTree" type="button">✕ ปิด</button>
+      </div>
+    </header>
+
+    <div id="storyTreeViewport" class="story-tree-viewport">
+      <div id="storyTreeCanvas" class="story-tree-canvas">
+        <svg id="storyTreeLines"
+             class="story-tree-lines"
+             aria-hidden="true"></svg>
+        <div id="storyTreeNodes"></div>
+      </div>
+    </div>
+
+    <footer class="story-tree-footer">
+      🟢 เริ่มต้น · 🟣 ฉากปัจจุบัน · 🏁 ฉากจบ ·
+      ⚠️ เส้นทางมีปัญหา
+    </footer>
+
+  </div>
+</div>
+
+<script src="js/editor.js"></script>
+<script src="export/exporter.js"></script>
+
+
+
+<!-- Dream Story Editor Layout V1 -->
+<script src="js/editor-layout.js"></script>
+<!-- Dream Story Compact Editor V1 -->
+<script src="js/editor-compact.js"></script>
+<!-- Dream Story Workspace 53 V1 -->
+<script src="js/workspace53.js"></script>
+<!-- Dream Story Batch 54 -->
+<script src="js/workspace54.js"></script>
+<!-- Dream Story Batch 55 -->
+<script src="js/workspace55.js"></script>
+<!-- Dream Story Batch 56 -->
+<script src="js/workspace56.js"></script>
+<!-- Dream Story Audio 57 -->
+<script src="js/audio57.js"></script>
+<!-- Dream Story Layout 58 -->
+<script src="js/layout58.js"></script>
+<!-- Dream Story Layout 59 -->
+<script src="js/layout59.js"></script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Offline setup:', err)));
+}
+</script>
+</body>
+</html>

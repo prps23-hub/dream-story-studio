@@ -1,0 +1,7 @@
+
+/* Dream Story Batch 55: project manager folded by default */
+.ds55-project-details{border:1px solid #48435f;border-radius:10px;overflow:hidden;background:#191b29}
+.ds55-project-details > summary{cursor:pointer;list-style:revert;padding:14px 16px;font-weight:700;color:#e5dcff}
+.ds55-project-content{padding:12px;min-width:0}
+.ds55-project-content > h2{display:none}
+.ds55-project-details:not([open]){min-height:0}
