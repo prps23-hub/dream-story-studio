@@ -1,186 +1,29 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#15131f">
-<link rel="apple-touch-icon" href="icon-192.png">
-
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dream Story Studio</title>
-  <link rel="stylesheet" href="css/style.css">
-<style>
-/* Dream Story Workspace 53 V1: home layout */
-@media(min-width:850px){
- body{min-height:100vh}
- main.container{max-width:1100px!important;width:min(1100px,96vw);margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
- main.container>header{grid-column:1/-1;text-align:center;margin:0;padding:10px 0}
- main.container>header h1{margin:4px 0}
- main.container>.project-panel{grid-column:1/-1;grid-row:auto;min-width:0;width:min(100%,620px);max-width:620px;justify-self:center}
- main.container>.project-backup-panel{grid-column:1/-1;grid-row:auto;min-width:0;width:min(100%,620px);justify-self:center}
-}
-.project-backup-panel.ds-home-collapsed>.ds-home-extra{display:none!important}
-.ds-home-toggle{margin:10px 0 0!important;width:100%;font-size:13px}
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dream Story Game</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="container">
-    <header>
-      <h1>Dream Story Studio</h1>
-      <p>สร้างเกม Visual Novel ของคุณได้ง่าย ๆ</p>
-    </header>
-
-    <section class="project-panel">
-      <h2>สร้างโปรเจกต์ใหม่</h2>
-
-      <label for="projectName">ชื่อเกม</label>
-      <input
-        type="text"
-        id="projectName"
-        placeholder="เช่น Mansion Mystery"
-        maxlength="80"
-      >
-
-      <h3>เลือกประเภทหน้าจอเกม</h3>
-
-      <div class="device-options">
-        <label class="device-card">
-          <input type="radio" name="device" value="mobile" checked>
-          <span>📱 มือถือ</span>
-          <small>แนวตั้ง 9:16</small>
-        </label>
-
-        <label class="device-card">
-          <input type="radio" name="device" value="desktop">
-          <span>🖥️ คอมพิวเตอร์</span>
-          <small>แนวนอน 16:9</small>
-        </label>
-      </div>
-
-      <button id="createProject" type="button">
-        สร้างโปรเจกต์
-      </button>
-
-      <p id="statusMessage" role="status"></p>
-    </section>
-
-<!-- Dream Story Project Backup V1 -->
-<section class="project-backup-panel">
-  <h2>💾 สำรองและกู้คืนโปรเจกต์</h2>
-  <p>เก็บไฟล์เกมและภาพประกอบไว้ในเครื่องของคุณ</p>
-
-  <label for="backupProjectSelect">เลือกโปรเจกต์</label>
-  <select id="backupProjectSelect"></select>
-
-  
-<!-- Dream Story Project Manager V1 -->
-<div class="project-manager-actions"
-     style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px">
-
-  <button id="openSelectedProject"
-          type="button">
-    📂 เปิดโปรเจกต์
-  </button>
-
-  <button id="renameSelectedProject"
-          type="button">
-    ✏️ เปลี่ยนชื่อ
-  </button>
-
-  <button id="deleteSelectedProject"
-          type="button"
-          style="background:#b91c1c">
-    🗑️ ลบโปรเจกต์
-  </button>
-
-</div>
-
-  <button id="backupProjectButton" type="button">
-    📦 ดาวน์โหลด Backup ZIP
-  </button>
-
-  <hr>
-
-  <label for="restoreProjectFile">กู้คืนจากไฟล์ ZIP</label>
-  <input id="restoreProjectFile"
-         type="file"
-         accept=".zip,application/zip"
-         style="display:none">
-
-  <button id="chooseRestoreFile"
-          type="button">
-    📁 เลือกไฟล์ Backup ZIP
-  </button>
-
-  <p id="restoreSelectedFilename">
-    ยังไม่ได้เลือกไฟล์
-  </p>
-
-  <button id="restoreProjectButton" type="button">
-    📂 กู้คืนเป็นโปรเจกต์ใหม่
-  </button>
-
-  <p id="projectBackupStatus" role="status"></p>
-</section>
-
-  </main>
-
-  <script src="js/database.js"></script>
-<script src="js/app.js"></script>
-<script src="js/project-backup.js"></script>
-
-<script>
-(() => {
-  const chooseButton =
-    document.getElementById("chooseRestoreFile");
-
-  const fileInput =
-    document.getElementById("restoreProjectFile");
-
-  const filename =
-    document.getElementById("restoreSelectedFilename");
-
-  if (!chooseButton || !fileInput || !filename) return;
-
-  chooseButton.addEventListener("click", () => {
-    fileInput.click();
-  });
-
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files?.[0];
-
-    filename.textContent = file
-      ? "✅ เลือกแล้ว: " + file.name
-      : "ยังไม่ได้เลือกไฟล์";
-  });
-})();
-</script>
-
-<script>
-/* Dream Story Workspace 53 V1: home quick actions */
-(()=>{
-const panel=document.querySelector('.project-backup-panel');if(!panel)return;
-const title=panel.querySelector('h2');if(title)title.textContent='📂 โปรเจกต์ของฉัน';
-const select=panel.querySelector('#backupProjectSelect');const actions=panel.querySelector('.project-manager-actions');
-if(!select||!actions)return;
-const extra=document.createElement('div');extra.className='ds-home-extra';
-const toggle=document.createElement('button');toggle.type='button';toggle.className='ds-home-toggle';toggle.textContent='💾 เปิดเครื่องมือสำรอง / กู้คืน';
-const nodes=[...panel.children];let after=false;
-for(const el of nodes){if(el===actions){after=true;continue;}if(after)extra.append(el)}
-panel.append(toggle,extra);panel.classList.add('ds-home-collapsed');
-toggle.addEventListener('click',()=>{const closed=panel.classList.toggle('ds-home-collapsed');toggle.textContent=closed?'💾 เปิดเครื่องมือสำรอง / กู้คืน':'▾ ปิดเครื่องมือสำรอง / กู้คืน'});
-})();
-</script>
-<!-- Dream Story Batch 55 -->
-<link rel="stylesheet" href="css/home55.css">
-<script src="js/home55.js"></script>
-<!-- Dream Story Batch 56 -->
-<script src="js/home56.js"></script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Offline setup:', err)));
-}
-</script>
+<main id="game">
+  <div id="ad">พื้นที่โฆษณา</div>
+  <div id="scene">
+    <div id="characters"></div>
+    <div id="choices" hidden></div>
+    <div id="ending" hidden>
+      <h1>THE END</h1>
+      <h2 id="endingTitle"></h2>
+      <button id="restart">↻ เล่นใหม่</button>
+    </div>
+    <div id="dialogue">
+      <strong id="speaker"></strong>
+      <p id="text"></p>
+    </div>
+  </div>
+</main>
+<script src="game-data.js"></script>
+<script src="player.js"></script>
 </body>
 </html>
