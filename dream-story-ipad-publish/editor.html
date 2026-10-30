@@ -175,6 +175,13 @@
     ดาวน์โหลดเกม ZIP
   </button>
   <p id="exportStatus" role="status" style="font-size:12px"></p>
+  <button id="publishGameButton" type="button" disabled>
+    🚀 เผยแพร่เกม (Publish)
+  </button>
+  <p id="publishStatus" role="status" aria-live="polite"
+     style="font-size:12px">
+    ระบบ Publish อยู่ระหว่างพัฒนา
+  </p>
 </div>
 <div class="choice-editor">
   <h3>ตัวเลือกของฉาก</h3>
@@ -356,5 +363,6 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Offline setup:', err)));
 }
 </script>
+<script src="js/publish.js"></script>
 </body>
 </html>
