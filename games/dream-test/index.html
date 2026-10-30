@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dream Story Game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="game">
+  <div id="ad">พื้นที่โฆษณา</div>
+  <div id="scene">
+    <div id="characters"></div>
+    <div id="choices" hidden></div>
+    <div id="ending" hidden>
+      <h1>THE END</h1>
+      <h2 id="endingTitle"></h2>
+      <button id="restart">↻ เล่นใหม่</button>
+    </div>
+    <div id="dialogue">
+      <strong id="speaker"></strong>
+      <p id="text"></p>
+    </div>
+  </div>
+</main>
+<script src="game-data.js"></script>
+<script src="player.js"></script>
+</body>
+</html>
