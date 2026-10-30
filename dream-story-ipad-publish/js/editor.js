@@ -499,7 +499,7 @@ characterSizeSlider.addEventListener("input", () => {
 
   selectedStageCharacter.style.width = size + "%";
   selectedStageCharacter.style.height = "auto";
-  selectedStageCharacter.style.maxHeight = "100%";
+  selectedStageCharacter.style.maxHeight = "none";
   characterSizeValue.textContent = size + "%";
 
   // ปรับตำแหน่งไม่ให้ตัวละครล้นขอบฉาก
@@ -507,14 +507,14 @@ characterSizeSlider.addEventListener("input", () => {
   const layer = document.getElementById("characterLayer");
 
   if (layer) {
-    const maxX = Math.max(0, layer.clientWidth - character.offsetWidth);
-    const maxY = Math.max(0, layer.clientHeight - character.offsetHeight);
-
     const currentX = character.offsetLeft;
     const currentY = character.offsetTop;
 
-    character.style.left = Math.max(0, Math.min(currentX, maxX)) + "px";
-    character.style.top = Math.max(0, Math.min(currentY, maxY)) + "px";
+    const rect = layer.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      character.style.left = (currentX / rect.width * 100) + "%";
+      character.style.top = (currentY / rect.height * 100) + "%";
+    }
     character.style.bottom = "auto";
     character.style.transform = "none";
   }
@@ -580,8 +580,10 @@ function placeCharacterOnStage(url, name, assetId, shouldSave = true) {
     const offsetX = event.clientX - imageRect.left;
     const offsetY = event.clientY - imageRect.top;
 
-    character.style.left = (imageRect.left - parentRect.left) + "px";
-    character.style.top = (imageRect.top - parentRect.top) + "px";
+    character.style.left =
+      ((imageRect.left - parentRect.left) / parentRect.width * 100) + "%";
+    character.style.top =
+      ((imageRect.top - parentRect.top) / parentRect.height * 100) + "%";
     character.style.bottom = "auto";
     character.style.transform = "none";
     character.style.cursor = "grabbing";
@@ -596,15 +598,11 @@ function placeCharacterOnStage(url, name, assetId, shouldSave = true) {
       const x = moveEvent.clientX - rect.left - offsetX;
       const y = moveEvent.clientY - rect.top - offsetY;
 
-      // จำกัดตำแหน่งให้อยู่ภายในพื้นที่ฉาก
-      const maxX = Math.max(0, rect.width - character.offsetWidth);
-      const maxY = Math.max(0, rect.height - character.offsetHeight);
-
-      const safeX = Math.max(0, Math.min(x, maxX));
-      const safeY = Math.max(0, Math.min(y, maxY));
-
-      character.style.left = safeX + "px";
-      character.style.top = safeY + "px";
+      // ใช้พิกัดสัมพันธ์กับขนาดฉาก รองรับตำแหน่งนอกขอบ
+      if (rect.width > 0 && rect.height > 0) {
+        character.style.left = (x / rect.width * 100) + "%";
+        character.style.top = (y / rect.height * 100) + "%";
+      }
     }
 
     function stopDragging(endEvent) {
@@ -612,14 +610,14 @@ function placeCharacterOnStage(url, name, assetId, shouldSave = true) {
 
       character.style.cursor = "grab";
       saveSceneCharacters();
-      character.removeEventListener("pointermove", moveCharacter);
-      character.removeEventListener("pointerup", stopDragging);
-      character.removeEventListener("pointercancel", stopDragging);
+      window.removeEventListener("pointermove", moveCharacter);
+      window.removeEventListener("pointerup", stopDragging);
+      window.removeEventListener("pointercancel", stopDragging);
     }
 
-    character.addEventListener("pointermove", moveCharacter);
-    character.addEventListener("pointerup", stopDragging);
-    character.addEventListener("pointercancel", stopDragging);
+    window.addEventListener("pointermove", moveCharacter);
+    window.addEventListener("pointerup", stopDragging);
+    window.addEventListener("pointercancel", stopDragging);
   });
 
   console.log("วางตัวละครลงฉาก:", name);
@@ -721,6 +719,16 @@ function renderDialogueList() {
       deleteDialogue(index);
     });
 
+    // DS_AUDIO_V11_PATCH: attach one-shot SFX to this dialogue line.
+    if (window.DS_audioChoices) {
+      const audioSelect = window.DS_audioChoices(entry.audioSfxId || '', '🔔 เสียงเมื่อถึงบรรทัด');
+      audioSelect.title = 'เสียงดังครั้งเดียวเมื่อบทสนทนาบรรทัดนี้เริ่ม';
+      audioSelect.addEventListener('change', () => {
+        entry.audioSfxId = audioSelect.value;
+        persistDialogueEntries();
+      });
+      row.append(audioSelect);
+    }
     row.append(selectButton, deleteButton);
     dialogueList.appendChild(row);
   });
@@ -748,6 +756,7 @@ function saveDialogue() {
   if (!dialogueEntries[selectedDialogueIndex]) return;
 
   dialogueEntries[selectedDialogueIndex] = {
+    ...dialogueEntries[selectedDialogueIndex],
     speaker: speakerInput.value,
     text: dialogueInput.value
   };
@@ -1295,9 +1304,17 @@ deleteSceneButton.addEventListener("click", async () => {
   await switchToScene(nextScene.id);
 });
 
+let sceneChoices = [];
+
 initializeScenes();
 
 if (activeSceneId) {
+  sceneSwitching = true;
+  try {
+    loadChoicesForScene(getActiveScene());
+  } finally {
+    sceneSwitching = false;
+  }
   switchToScene(activeSceneId);
 }
 
@@ -1313,7 +1330,7 @@ const choiceEditorList =
 const gameChoices =
   document.getElementById("gameChoices");
 
-let sceneChoices = [];
+
 
 function persistSceneChoices() {
   if (!currentProject || sceneSwitching) return;
@@ -1376,6 +1393,15 @@ function renderChoiceEditor() {
       renderChoiceEditor();
     });
 
+    // DS_AUDIO_V11_PATCH: optional SFX on selecting a choice.
+    if (window.DS_audioChoices) {
+      const audioSelect = window.DS_audioChoices(choice.audioSfxId || '', '🔔 เสียงเมื่อเลือก');
+      audioSelect.addEventListener('change', () => {
+        choice.audioSfxId = audioSelect.value;
+        persistSceneChoices();
+      });
+      row.append(audioSelect);
+    }
     row.append(label, destination, remove);
     choiceEditorList.appendChild(row);
   });

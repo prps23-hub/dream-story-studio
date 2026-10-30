@@ -13,6 +13,47 @@ const speaker = $("speaker");
 const text = $("text");
 let scene = null, index = 0, timer = null, complete = false;
 let currentText = "";
+// DS_AUDIO_V11_PATCH: independent music and one-shot sound channels.
+const music = new Audio(); music.loop = true;
+const effect = new Audio();
+let activeMusicPath = '';
+let soundEnabled = false;
+function soundPath(id) { return id && data.assetPaths ? data.assetPaths[id] || '' : ''; }
+// DS_AUDIO_SPLIT_V11_1: fall back to legacy audioVolume on old projects.
+function audioVolume(s,kind) {
+  const value=s?.[kind==='bgm'?'audioBgmVolume':'audioSfxVolume']??s?.audioVolume??70;
+  const n=Number(value);
+  return Number.isFinite(n)?Math.max(0,Math.min(1,n/100)):0.7;
+}
+function playEffect(id) {
+  const src=soundPath(id);
+  if (!src || !soundEnabled) return;
+  effect.pause(); effect.src=src; effect.currentTime=0;
+  effect.volume=audioVolume(scene,'sfx');
+  effect.play().catch(()=>{});
+}
+function setSceneMusic(s) {
+  const src=soundPath(s.audioBgmId);
+  if (!src) { music.pause();music.removeAttribute('src');activeMusicPath='';return; }
+  music.volume=audioVolume(s,'bgm');
+  if (src!==activeMusicPath) { music.pause();music.src=src;activeMusicPath=src; }
+  if(soundEnabled && music.paused) music.play().catch(()=>{});
+}
+function unlockSound() {
+  if(soundEnabled)return;
+  soundEnabled=true;
+  if(scene) {setSceneMusic(scene);}
+}
+const soundButton=document.createElement('button');
+soundButton.type='button';soundButton.textContent='🔇 เปิดเสียง';
+soundButton.setAttribute('aria-label','เปิดหรือปิดเสียงเกม');
+soundButton.style.cssText='align-self:flex-end;margin:3px 8px;padding:5px 10px;background:#292347;color:white;border:1px solid #a78bfa;border-radius:6px;cursor:pointer;';
+game.insertBefore(soundButton,sceneEl);
+soundButton.addEventListener('click',e=>{
+  e.stopPropagation();
+  if(!soundEnabled){unlockSound();soundButton.textContent='🔊 ปิดเสียง';}
+  else {soundEnabled=false;music.pause();effect.pause();soundButton.textContent='🔇 เปิดเสียง';}
+});
 
 game.classList.toggle("mobile", data.aspectRatio === "9:16");
 
@@ -24,6 +65,7 @@ function showLine() {
   stopTimer();
   const entry = (scene.dialogues || [])[index];
   if (!entry) return finishScene();
+  playEffect(entry.audioSfxId);
   currentText = entry.text || "";
   speaker.textContent = entry.speaker || "ผู้บรรยาย";
   text.textContent = "";
@@ -49,6 +91,8 @@ function loadScene(id) {
   }
   index = 0;
   complete = false;
+  setSceneMusic(scene);
+  playEffect(scene.audioSfxId);
   choices.replaceChildren();
   choices.hidden = true;
   ending.hidden = true;
@@ -122,6 +166,8 @@ function finishScene() {
     const button = document.createElement("button");
     button.textContent = choice.text || "ตัวเลือก";
     button.addEventListener("click", () => {
+      unlockSound();
+      playEffect(choice.audioSfxId);
       if (choice.targetSceneId) loadScene(choice.targetSceneId);
     });
     choices.appendChild(button);
@@ -133,6 +179,7 @@ sceneEl.addEventListener("click", (event) => {
   // กลายเป็นการข้ามบทสนทนาด้วย
   if (event.target.closest("#choices, #ending")) return;
 
+  unlockSound();
   if (!scene || dialogue.hidden) return;
   if (!complete) {
     stopTimer();
@@ -144,6 +191,7 @@ sceneEl.addEventListener("click", (event) => {
   showLine();
 });
 $("restart").addEventListener("click", () => {
+  unlockSound();
   if (scenes.length) loadScene(scenes[0].id);
 });
 if (scenes.length) loadScene(scenes[0].id);

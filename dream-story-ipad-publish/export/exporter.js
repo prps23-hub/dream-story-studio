@@ -104,12 +104,26 @@ button.addEventListener("click", async () => {
     for(const s of project.scenes) {
       if(s.backgroundId) used.add(s.backgroundId);
       for(const c of s.characters||[]) if(c.assetId) used.add(c.assetId);
+      if(s.audioBgmId) used.add(s.audioBgmId);
+      if(s.audioSfxId) used.add(s.audioSfxId);
+      for(const d of s.dialogues||[]) if(d.audioSfxId) used.add(d.audioSfxId);
+      for(const c of s.choices||[]) if(c.audioSfxId) used.add(c.audioSfxId);
     }
     const paths={};
     const files=[];
     let n=0;
     for(const asset of assets) {
       if(!used.has(asset.id)) continue;
+      if(asset.type==='audio' || asset.kind==='audio' || (asset.mimeType||'').startsWith('audio/')) {
+        const raw=asset.blob||asset.file||asset.data;
+        if(!(raw instanceof Blob)) throw new Error('ไม่พบไฟล์เสียง: '+asset.name);
+        const extension=(asset.name||'').split('.').pop().toLowerCase();
+        const extAudio=['mp3','m4a','aac','wav','ogg','webm'].includes(extension)?extension:'mp3';
+        const name=`assets/audio_${++n}.${extAudio}`;
+        paths[asset.id]=name;
+        files.push({name,data:new Uint8Array(await raw.arrayBuffer())});
+        continue;
+      }
       const ext=asset.file.type==="image/png"?"png":
         asset.file.type==="image/webp"?"webp":"jpg";
       const name=`assets/image_${++n}.${ext}`;
