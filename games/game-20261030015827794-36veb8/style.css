@@ -1,0 +1,24 @@
+*{box-sizing:border-box}
+body{margin:0;background:#10101b;color:white;font-family:system-ui,sans-serif;
+display:flex;justify-content:center;align-items:center;min-height:100vh}
+#game{width:min(100vw,640px);background:#17172b;display:flex;flex-direction:column}
+#game.mobile{max-width:270px}
+#ad{height:36px;display:grid;place-items:center;background:#25253b;font-size:12px}
+#scene{position:relative;width:100%;aspect-ratio:16/9;background-size:cover;
+background-position:center;overflow:hidden}
+#game.mobile #scene{aspect-ratio:5/8}
+#game:not(.mobile) #scene{aspect-ratio:160/81}
+#game.mobile #ad{height:48px}
+#characters{position:absolute;inset:0;pointer-events:none}
+#characters img{position:absolute;object-fit:contain}
+#dialogue{position:absolute;bottom:0;left:0;right:0;z-index:10;
+min-height:100px;padding:14px;background:rgba(9,9,22,.87);cursor:pointer}
+#dialogue p{white-space:pre-wrap;margin:8px 0 0;line-height:1.6}
+#choices{position:absolute;z-index:20;top:15%;left:10%;right:10%;
+display:flex;flex-direction:column;gap:10px}
+#choices button,#ending button{padding:12px;background:#292347;color:white;
+border:1px solid #a78bfa;border-radius:8px;cursor:pointer}
+#ending{position:absolute;z-index:30;inset:0;background:rgba(9,9,22,.95);
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+text-align:center;padding:20px}
+[hidden]{display:none!important}
