@@ -1,6 +1,18 @@
 const projectTitle = document.getElementById("projectTitle");
 const aspectRatioLabel = document.getElementById("aspectRatioLabel");
 const gameStage = document.getElementById("gameStage");
+const gameEnding = document.getElementById("gameEnding");
+
+// Initialize controls before scene/background loading.
+const choiceEditorList = document.getElementById("choiceEditorList");
+const backgroundZoom = document.getElementById("backgroundZoom");
+const backgroundZoomValue = document.getElementById("backgroundZoomValue");
+
+const validateGameButton =
+  document.getElementById("validateGameButton");
+
+const gameValidationResults =
+  document.getElementById("gameValidationResults");
 
 const params = new URLSearchParams(window.location.search);
 const projectId = params.get("project");
@@ -188,15 +200,22 @@ backgroundFileInput.addEventListener("change", async () => {
   };
 
   try {
-    await saveAsset(asset);
+    try {
+      await saveAsset(asset);
+    } catch (error) {
+      console.error("บันทึกภาพลง IndexedDB ไม่สำเร็จ:", error);
+      alert("บันทึกไฟล์ภาพไม่สำเร็จ: " + (error?.message || error));
+      return;
+    }
 
-    const url = addBackgroundToLibrary(asset);
-    showBackground(url, asset.id);
-
-    console.log("บันทึกฉากหลังสำเร็จ:", asset.name);
-  } catch (error) {
-    console.error(error);
-    alert("บันทึกภาพไม่สำเร็จ กรุณาตรวจสอบพื้นที่จัดเก็บ");
+    try {
+      const url = addBackgroundToLibrary(asset);
+      showBackground(url, asset.id);
+      console.log("บันทึกและแสดงฉากหลังสำเร็จ:", asset.name);
+    } catch (error) {
+      console.error("บันทึกภาพแล้ว แต่แสดงภาพไม่สำเร็จ:", error);
+      alert("บันทึกภาพแล้ว แต่แสดงภาพไม่สำเร็จ กรุณาลองเปิดโปรเจกต์อีกครั้ง");
+    }
   } finally {
     backgroundFileInput.value = "";
   }
@@ -1306,17 +1325,7 @@ deleteSceneButton.addEventListener("click", async () => {
 
 let sceneChoices = [];
 
-initializeScenes();
 
-if (activeSceneId) {
-  sceneSwitching = true;
-  try {
-    loadChoicesForScene(getActiveScene());
-  } finally {
-    sceneSwitching = false;
-  }
-  switchToScene(activeSceneId);
-}
 
 
 // ===== Dream Story Branching Choices V1 =====
@@ -1324,8 +1333,7 @@ if (activeSceneId) {
 const addChoiceButton =
   document.getElementById("addChoiceButton");
 
-const choiceEditorList =
-  document.getElementById("choiceEditorList");
+
 
 const gameChoices =
   document.getElementById("gameChoices");
@@ -1408,6 +1416,7 @@ function renderChoiceEditor() {
 }
 
 function loadChoicesForScene(scene) {
+  if (!scene) return;
   sceneChoices = JSON.parse(
     JSON.stringify(scene.choices || [])
   );
@@ -1481,9 +1490,7 @@ function showGameChoices() {
   gameChoices.hidden = false;
 }
 
-if (currentProject) {
-  loadChoicesForScene(getActiveScene());
-}
+
 
 
 // ===== Dream Story Background Management V1 =====
@@ -1630,8 +1637,7 @@ const isEndingSceneInput =
 const endingTitleInput =
   document.getElementById("endingTitle");
 
-const gameEnding =
-  document.getElementById("gameEnding");
+
 
 const gameEndingTitle =
   document.getElementById("gameEndingTitle");
@@ -1799,11 +1805,7 @@ async function deleteCharacterFromLibrary(assetId, assetName, row) {
 
 // ===== Dream Story Game Validator V1 =====
 
-const validateGameButton =
-  document.getElementById("validateGameButton");
-
-const gameValidationResults =
-  document.getElementById("gameValidationResults");
+// V1.1.1: Validation DOM references initialized near the start of Editor.
 
 function validateDreamStoryGame(project) {
   const errors = [];
@@ -1953,11 +1955,9 @@ validateGameButton.addEventListener("click", () => {
 const backgroundEditMode =
   document.getElementById("backgroundEditMode");
 
-const backgroundZoom =
-  document.getElementById("backgroundZoom");
 
-const backgroundZoomValue =
-  document.getElementById("backgroundZoomValue");
+
+
 
 const resetBackgroundPosition =
   document.getElementById("resetBackgroundPosition");
@@ -2737,4 +2737,21 @@ function getBackgroundDragGeometry() {
     width: Number.isFinite(width) ? width : rect.width,
     height: Number.isFinite(height) ? height : rect.height
   };
+}
+
+
+// ===== Dream Story Studio: safe startup =====
+initializeScenes();
+
+if (activeSceneId && getActiveScene()) {
+  sceneSwitching = true;
+  try {
+    loadChoicesForScene(getActiveScene());
+  } finally {
+    sceneSwitching = false;
+  }
+
+  switchToScene(activeSceneId).catch(error => {
+    console.error("เริ่มต้นฉากไม่สำเร็จ:", error);
+  });
 }

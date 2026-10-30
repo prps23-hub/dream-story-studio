@@ -109,6 +109,13 @@ button.addEventListener("click", async () => {
       for(const d of s.dialogues||[]) if(d.audioSfxId) used.add(d.audioSfxId);
       for(const c of s.choices||[]) if(c.audioSfxId) used.add(c.audioSfxId);
     }
+    // Check all referenced image and audio assets before exporting.
+    const byId=new Map(assets.map(asset=>[asset.id,asset]));
+    const missing=[...used].filter(id=>{
+      const asset=byId.get(id);
+      return !asset || !((asset.blob||asset.file||asset.data) instanceof Blob);
+    });
+    if(missing.length)throw new Error(`ไม่พบไฟล์ภาพหรือเสียงที่เกมใช้งาน ${missing.length} รายการ กรุณาตรวจสอบไฟล์ในโปรเจกต์`);
     const paths={};
     const files=[];
     let n=0;

@@ -1,7 +1,8 @@
 (() => {
 "use strict";
-const data = window.DREAM_STORY_GAME;
-const scenes = data.scenes || [];
+const data = window.DREAM_STORY_GAME || {};
+const scenes = Array.isArray(data.scenes) ? data.scenes : [];
+const assetPaths = data.assetPaths || {};
 const $ = id => document.getElementById(id);
 const game = $("game");
 const sceneEl = $("scene");
@@ -97,7 +98,7 @@ function loadScene(id) {
   choices.hidden = true;
   ending.hidden = true;
   dialogue.hidden = false;
-  const bg = data.assetPaths[scene.backgroundId];
+  const bg = assetPaths[scene.backgroundId];
   sceneEl.style.backgroundImage = bg ? `url("${bg}")` : "none";
 
   const backgroundTransform = scene.backgroundTransform ||
@@ -117,7 +118,7 @@ function loadScene(id) {
   sceneEl.style.backgroundRepeat = "no-repeat";
   characters.replaceChildren();
   for (const c of scene.characters || []) {
-    const src = data.assetPaths[c.assetId];
+    const src = assetPaths[c.assetId];
     if (!src) continue;
     const img = document.createElement("img");
     img.src = src;
@@ -195,4 +196,10 @@ $("restart").addEventListener("click", () => {
   if (scenes.length) loadScene(scenes[0].id);
 });
 if (scenes.length) loadScene(scenes[0].id);
+else {
+  dialogue.hidden=true;
+  const message=document.createElement('p');
+  message.textContent='เกมนี้ยังไม่มีฉากให้เล่น';
+  sceneEl.appendChild(message);
+}
 })();
