@@ -9,6 +9,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Editor | Dream Story Studio</title>
   <link rel="stylesheet" href="css/editor.css">
+<script src="vendor/heic2any.min.js"></script>
 </head>
 <body>
   <div class="editor-app">
@@ -39,7 +40,7 @@
           <input
             id="backgroundFileInput"
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png,image/jpeg,image/webp,image/heic,image/heif,.heic,.heif"
             hidden
           >
           <button id="clearSceneBackground" type="button">
@@ -85,7 +86,7 @@
           <input
             id="characterFileInput"
             type="file"
-            accept="image/png,image/webp"
+            accept="image/png,image/jpeg,image/webp,image/heic,image/heif,.heic,.heif"
             hidden
           >
           <div id="characterLibrary" class="asset-list"></div>

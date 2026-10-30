@@ -172,14 +172,46 @@ addBackgroundButton.addEventListener("click", () => {
   backgroundFileInput.click();
 });
 
+
+// Convert HEIC/HEIF to JPEG before saving to IndexedDB.
+async function prepareImageFile(file) {
+  const isHeif = ["image/heic", "image/heif"].includes(file.type.toLowerCase())
+    || /\.(heic|heif)$/i.test(file.name);
+
+  if (!isHeif) return file;
+
+  if (typeof heic2any !== "function") {
+    throw new Error("ไม่พบระบบแปลง HEIC/HEIF");
+  }
+
+  const converted = await heic2any({
+    blob: file,
+    toType: "image/jpeg",
+    quality: 0.85
+  });
+
+  const blob = Array.isArray(converted) ? converted[0] : converted;
+
+  if (!blob) {
+    throw new Error("ไม่สามารถแปลงไฟล์ HEIC/HEIF ได้");
+  }
+
+  const name = file.name.replace(/\.(heic|heif)$/i, "") + ".jpg";
+
+  return new File([blob], name, {
+    type: "image/jpeg",
+    lastModified: Date.now()
+  });
+}
+
 backgroundFileInput.addEventListener("change", async () => {
   const file = backgroundFileInput.files[0];
   if (!file || !currentProject) return;
 
-  const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+  const allowedTypes = ["image/png", "image/jpeg", "image/webp", "image/heic", "image/heif"];
 
   if (!allowedTypes.includes(file.type)) {
-    alert("รองรับเฉพาะไฟล์ PNG, JPG และ WebP");
+    alert("รองรับไฟล์ PNG, JPG, JPEG, WebP, HEIC และ HEIF");
     backgroundFileInput.value = "";
     return;
   }
@@ -190,12 +222,21 @@ backgroundFileInput.addEventListener("change", async () => {
     return;
   }
 
+  let preparedFile;
+  try {
+    preparedFile = await prepareImageFile(file);
+  } catch (error) {
+    console.error("แปลงภาพไม่สำเร็จ:", error);
+    alert("ไม่สามารถแปลงภาพได้: " + (error?.message || error));
+    return;
+  }
+
   const asset = {
     id: crypto.randomUUID(),
     projectId: currentProject.id,
     type: "background",
-    name: file.name,
-    file: file,
+    name: preparedFile.name,
+    file: preparedFile,
     createdAt: new Date().toISOString()
   };
 
@@ -324,8 +365,8 @@ characterFileInput.addEventListener("change", async () => {
   const file = characterFileInput.files[0];
   if (!file || !currentProject) return;
 
-  if (!["image/png", "image/webp"].includes(file.type)) {
-    alert("รองรับเฉพาะภาพตัวละคร PNG และ WebP");
+  if (!["image/png", "image/jpeg", "image/webp", "image/heic", "image/heif"].includes(file.type)) {
+    alert("รองรับภาพตัวละคร PNG, JPG, JPEG, WebP, HEIC และ HEIF");
     characterFileInput.value = "";
     return;
   }
@@ -336,12 +377,21 @@ characterFileInput.addEventListener("change", async () => {
     return;
   }
 
+  let preparedFile;
+  try {
+    preparedFile = await prepareImageFile(file);
+  } catch (error) {
+    console.error("แปลงภาพไม่สำเร็จ:", error);
+    alert("ไม่สามารถแปลงภาพได้: " + (error?.message || error));
+    return;
+  }
+
   const asset = {
     id: crypto.randomUUID(),
     projectId: currentProject.id,
     type: "character",
-    name: file.name,
-    file: file,
+    name: preparedFile.name,
+    file: preparedFile,
     createdAt: new Date().toISOString()
   };
 
