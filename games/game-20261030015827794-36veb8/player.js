@@ -1,0 +1,150 @@
+(() => {
+"use strict";
+const data = window.DREAM_STORY_GAME;
+const scenes = data.scenes || [];
+const $ = id => document.getElementById(id);
+const game = $("game");
+const sceneEl = $("scene");
+const characters = $("characters");
+const choices = $("choices");
+const ending = $("ending");
+const dialogue = $("dialogue");
+const speaker = $("speaker");
+const text = $("text");
+let scene = null, index = 0, timer = null, complete = false;
+let currentText = "";
+
+game.classList.toggle("mobile", data.aspectRatio === "9:16");
+
+function stopTimer() {
+  if (timer !== null) clearInterval(timer);
+  timer = null;
+}
+function showLine() {
+  stopTimer();
+  const entry = (scene.dialogues || [])[index];
+  if (!entry) return finishScene();
+  currentText = entry.text || "";
+  speaker.textContent = entry.speaker || "ผู้บรรยาย";
+  text.textContent = "";
+  complete = currentText.length === 0;
+  const letters = Array.from(currentText);
+  let n = 0;
+  if (complete) return;
+  timer = setInterval(() => {
+    n++;
+    text.textContent = letters.slice(0,n).join("");
+    if (n >= letters.length) {
+      stopTimer();
+      complete = true;
+    }
+  },35);
+}
+function loadScene(id) {
+  stopTimer();
+  scene = scenes.find(s => s.id === id);
+  if (!scene) {
+    alert("ไม่พบฉากปลายทาง");
+    return;
+  }
+  index = 0;
+  complete = false;
+  choices.replaceChildren();
+  choices.hidden = true;
+  ending.hidden = true;
+  dialogue.hidden = false;
+  const bg = data.assetPaths[scene.backgroundId];
+  sceneEl.style.backgroundImage = bg ? `url("${bg}")` : "none";
+
+  const backgroundTransform = scene.backgroundTransform ||
+    { x: 50, y: 50, zoom: 100 };
+
+  const bx = Math.max(0, Math.min(100,
+    Number(backgroundTransform.x) || 0));
+
+  const by = Math.max(0, Math.min(100,
+    Number(backgroundTransform.y) || 0));
+
+  const bz = Math.max(100, Math.min(300,
+    Number(backgroundTransform.zoom) || 100));
+
+  sceneEl.style.backgroundSize = `${bz}% auto`;
+  sceneEl.style.backgroundPosition = `${bx}% ${by}%`;
+  sceneEl.style.backgroundRepeat = "no-repeat";
+  characters.replaceChildren();
+  for (const c of scene.characters || []) {
+    const src = data.assetPaths[c.assetId];
+    if (!src) continue;
+    const img = document.createElement("img");
+    img.src = src;
+    // Preserve CSS units saved by the editor (px, %, etc.).
+    for (const key of ["x","y","width","height"]) {
+      const raw = c[key];
+      if (raw === null || raw === undefined || raw === "") continue;
+
+      const value = String(raw).trim();
+
+      // Values with units are used as-is.
+      // Plain numbers are treated as percentages for compatibility.
+      const cssValue = /^-?\d+(?:\.\d+)?$/.test(value)
+        ? value + "%"
+        : value;
+
+      if (!/^-?\d+(?:\.\d+)?(?:px|%|vw|vh)$/.test(cssValue)) {
+        console.warn("Invalid character dimension:", key, raw);
+        continue;
+      }
+
+      const property = key === "x" ? "left" :
+                       key === "y" ? "top" : key;
+
+      img.style[property] = cssValue;
+    }
+    characters.appendChild(img);
+  }
+  showLine();
+}
+function finishScene() {
+  stopTimer();
+  if (scene.isEnding) {
+    dialogue.hidden = true;
+    $("endingTitle").textContent = scene.endingTitle || "จบเรื่องราว";
+    ending.hidden = false;
+    return;
+  }
+  const options = scene.choices || [];
+  if (!options.length) {
+    dialogue.hidden = true;
+    return;
+  }
+  choices.replaceChildren();
+  for (const choice of options) {
+    const button = document.createElement("button");
+    button.textContent = choice.text || "ตัวเลือก";
+    button.addEventListener("click", () => {
+      if (choice.targetSceneId) loadScene(choice.targetSceneId);
+    });
+    choices.appendChild(button);
+  }
+  choices.hidden = false;
+}
+sceneEl.addEventListener("click", (event) => {
+  // อย่าให้การแตะปุ่มตัวเลือกหรือปุ่มจบเกม
+  // กลายเป็นการข้ามบทสนทนาด้วย
+  if (event.target.closest("#choices, #ending")) return;
+
+  if (!scene || dialogue.hidden) return;
+  if (!complete) {
+    stopTimer();
+    text.textContent = currentText;
+    complete = true;
+    return;
+  }
+  index++;
+  showLine();
+});
+$("restart").addEventListener("click", () => {
+  if (scenes.length) loadScene(scenes[0].id);
+});
+if (scenes.length) loadScene(scenes[0].id);
+})();
